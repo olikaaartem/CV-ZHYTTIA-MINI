@@ -11,3 +11,162 @@
 .dream-requirements .muted{margin:0 0 10px}
 .dream-requirements .stat{font-size:14px;padding:10px 12px}
 @media(max-width:700px){.dream-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dream{min-height:115px}.dream-requirements .stat{font-size:12px}}
+/* Фішки без фону та рамок */
+.token {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  width: 62px;
+  height: 82px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 3px #0006);
+}
+
+.token.active-token {
+  width: 76px;
+  height: 96px;
+  filter:
+    drop-shadow(2px 0 1px white)
+    drop-shadow(-2px 0 1px white)
+    drop-shadow(0 2px 1px white)
+    drop-shadow(0 -2px 1px white)
+    drop-shadow(0 0 7px var(--player))
+    drop-shadow(0 0 5px #ffd633);
+}
+
+/* Два ряди по п’ять персонажів */
+.character-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.character {
+  height: 210px;
+}
+
+.character img {
+  height: 165px;
+}
+
+/* Стартова кар’єра та ресурси */
+.start-career {
+  background: #ffea9e;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.start-career small {
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.start-career h3 {
+  margin: 8px 0 0;
+}
+
+.career-detail {
+  margin: 0 0 20px;
+}
+
+.career-detail .stat {
+  font-size: 14px;
+  padding: 11px;
+}
+
+/* Більші кубик і гравці */
+#currentHero {
+  font-size: 25px;
+  gap: 16px;
+}
+
+#currentHero img {
+  height: 115px;
+  width: 80px;
+}
+
+.dice {
+  font-size: 80px;
+  height: 100px;
+}
+
+.player-row {
+  padding: 9px 10px;
+  gap: 12px;
+}
+
+.player-row img {
+  height: 78px;
+  width: 53px;
+}
+
+.player-row strong {
+  font-size: 17px;
+}
+
+.player-row small {
+  font-size: 12px;
+}
+
+#roster {
+  gap: 10px;
+}
+
+/* Компактніше для великої команди */
+#game[data-team-size="5"] .player-row img,
+#game[data-team-size="6"] .player-row img {
+  height: 45px;
+  width: 34px;
+}
+
+#game[data-team-size="5"] .player-row,
+#game[data-team-size="6"] .player-row {
+  padding: 5px 8px;
+}
+
+#game[data-team-size="5"] #currentHero img,
+#game[data-team-size="6"] #currentHero img {
+  height: 65px;
+  width: 48px;
+}
+
+#game[data-team-size="5"] .dice,
+#game[data-team-size="6"] .dice {
+  height: 65px;
+  font-size: 55px;
+}
+
+@media (max-height: 850px) {
+  #currentHero img {
+    height: 75px;
+    width: 52px;
+  }
+
+  .dice {
+    height: 65px;
+    font-size: 55px;
+  }
+
+  .player-row img {
+    height: 48px;
+    width: 35px;
+  }
+
+  .character {
+    height: 175px;
+  }
+
+  .character img {
+    height: 135px;
+  }
+}
+
+@media (max-width: 700px) {
+  .character-grid {
+    grid-template-columns: repeat(5, minmax(70px, 1fr));
+    min-width: 410px;
+    gap: 8px;
+  }
+}
