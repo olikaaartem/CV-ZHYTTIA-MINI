@@ -48,3 +48,77 @@ function showProfile(index){let p=players[index],c=GAME_DATA.careers[p.career],d
 function resetGame(){if(rolling)return;if(!confirm('Почати нову гру та скинути поточні позиції?'))return;closeModal();$('game').hidden=true;$('wizard').hidden=true;$('welcome').hidden=false;phase='awaitRoll';roll=null;target=null;step=0;actor=0}
 function endGame(){if(rolling)return;if(!confirm('Завершити цю гру?'))return;phase='finished';roll=null;target=null;renderGame();openModal('<div class="end-title">Дякуємо за гру! 💛</div><p style="text-align:center">Кожен крок наближає до Мрії.</p><div class="finish-heroes">'+players.map(p=>`<div><img src="images/${p.token}.png" alt=""><b>${esc(p.name)}</b></div>`).join('')+'</div><p style="text-align:center">Результати й виконані Мрії визначте разом за своїми аркушами.</p><button id="restartFromFinish" class="primary" style="width:100%">Нова гра</button>','finish');$('restartFromFinish').onclick=()=>{closeModal();$('game').hidden=true;$('welcome').hidden=false;step=0;actor=0};$('doneModal').textContent='На заставку'}
 $('begin').onclick=()=>{step=0;actor=0;renderWizard()};$('continue').onclick=continueSetup;$('back').onclick=backSetup;$('roll').onclick=rollDice;$('draw').onclick=drawCard;$('next').onclick=nextTurn;$('newGame').onclick=resetGame;$('endGame').onclick=endGame;$('doneModal').onclick=()=>{if(modalMode==='finish'){closeModal();$('game').hidden=true;$('welcome').hidden=false;step=0;actor=0}else closeModal()};$('closeModal').onclick=closeModal;window.addEventListener('resize',fitBoard);
+
+
+/* Герої та стартові показники */
+(() => {
+  const raifikIndex = TOKENS.findIndex(
+    token => token[0] === "raifik"
+  );
+
+  if (raifikIndex !== -1) {
+    TOKENS.splice(raifikIndex, 1);
+  }
+
+  const previousStatsRow = statsRow;
+
+  statsRow = function (stats) {
+    const html = previousStatsRow(stats);
+
+    if (html.includes("Стартові гроші")) {
+      return html;
+    }
+
+    return html.replace(
+      '<div class="stats">',
+      `<div class="stats">
+        <span class="stat">
+          💵 Стартові гроші:
+          <b>${money(stats.salary)}</b>
+        </span>`
+    );
+  };
+
+  const previousCareerTable = careerTable;
+
+  careerTable = function (career) {
+    const html = previousCareerTable(career);
+
+    if (html.includes("ТВОЯ СТАРТОВА СХОДИНКА")) {
+      return html;
+    }
+
+    return html.replace(
+      '<div class="career-detail">',
+      `<div class="career-detail">
+        <div class="start-career">
+          <small>ТВОЯ СТАРТОВА СХОДИНКА · РІВЕНЬ 1</small>
+          <h3>${esc(career.levels[0])}</h3>
+        </div>`
+    );
+  };
+
+  const previousRenderWizard = renderWizard;
+
+  renderWizard = function () {
+    previousRenderWizard();
+
+    if (step === 2) {
+      const container = document.getElementById("setupContent");
+      const details = container.querySelector(".career-detail");
+      const randomButton = document.getElementById("randomCareer");
+
+      if (details && randomButton) {
+        container.insertBefore(details, randomButton);
+        container.scrollTop = 0;
+      }
+    }
+  };
+
+  const previousRenderGame = renderGame;
+
+  renderGame = function () {
+    document.getElementById("game").dataset.teamSize = players.length;
+    previousRenderGame();
+  };
+})();
