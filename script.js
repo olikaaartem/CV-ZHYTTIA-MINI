@@ -122,3 +122,220 @@ $('begin').onclick=()=>{step=0;actor=0;renderWizard()};$('continue').onclick=con
     previousRenderGame();
   };
 })();
+
+
+/* Спеціальні поля та нагадування */
+(() => {
+  if (window.cvSpecialFieldsEnabled) return;
+  window.cvSpecialFieldsEnabled = true;
+
+  const previousStartGame = startGame;
+
+  startGame = function () {
+    players.forEach(player => {
+      player.completedTurns = 0;
+      player.salaryLevel = 0;
+    });
+
+    previousStartGame();
+  };
+
+  /* Конкретні правила спеціальних полів */
+  const previousDrawCard = drawCard;
+
+  drawCard = function () {
+    if (phase !== "moved") return;
+
+    const player = players[currentIndex];
+    const type = BOARDS[player.ring][player.position];
+
+    const rules = {
+      lounge: `
+        <h2>☕ Lounge & Хобі</h2>
+
+        <div class="choice">
+          <h3>Якщо енергія нижча за 100</h3>
+          <p class="effect">
+            ⚡ Віднови енергію до 100.
+          </p>
+        </div>
+
+        <div class="choice">
+          <h3>Якщо енергія вже 100</h3>
+          <p class="effect">
+            🛡️ Протягом наступного повного кола
+            енергія не зменшується.
+          </p>
+          <p>Познач цей захист у своєму аркуші.</p>
+        </div>
+      `,
+
+      academy: `
+        <h2>🎓 Академія & Soft Skills</h2>
+        <p>Обери один напрямок розвитку.</p>
+
+        <div class="choice">
+          <h3>💬 Soft Skills / Комунікація</h3>
+          <p>Потрібно: 3 000 грн.</p>
+          <p class="effect">
+            💰 −3 000 грн<br>
+            🧠 +10 знань · ⭐ +5 репутації
+          </p>
+        </div>
+
+        <div class="choice">
+          <h3>🧠 Професійна сертифікація</h3>
+          <p>Потрібно: 6 000 грн і 10 енергії.</p>
+          <p class="effect">
+            💰 −6 000 грн · ⚡ −10 енергії<br>
+            🧠 +25 знань · ⭐ +10 репутації
+          </p>
+        </div>
+
+        <div class="choice">
+          <h3>🤝 Менторська сесія</h3>
+          <p>
+            Обери іншого гравця,
+            у якого щонайменше 70 знань.
+          </p>
+          <p class="effect">
+            Ти: 💰 −23 000 грн · 🧠 +20 знань<br>
+            Ментор: 💰 +23 000 грн · ⭐ +5 репутації
+          </p>
+        </div>
+      `,
+
+      start: `
+        <h2>🚩 Точна зупинка на START</h2>
+        <p>${esc(player.name)}, запиши бонус:</p>
+        <p class="effect">
+          💰 +${money(
+            player.ring === "inner" ? 50000 : 100000
+          )}
+        </p>
+        <p>
+          Бонус за перетин START цього разу
+          додатково не нараховується.
+        </p>
+      `
+    };
+
+    if (!rules[type]) {
+      previousDrawCard();
+      return;
+    }
+
+    phase = "read";
+    renderGame();
+
+    openModal(
+      `<div class="card-label">СПЕЦІАЛЬНЕ ПОЛЕ</div>
+       ${rules[type]}
+       <p class="note">
+         Перевір умови за своїм аркушем.
+         Усі зміни запиши самостійно.
+       </p>`,
+      "card"
+    );
+  };
+
+  /* Повідомлення при перетині START */
+  const previousPlaceToken = placeToken;
+
+  placeToken = function (ring, position) {
+    const player = players[currentIndex];
+
+    const passedStart =
+      phase === "rolled" &&
+      !rolling &&
+      target &&
+      target.ring === ring &&
+      target.position === position &&
+      player.ring === ring &&
+      player.position + roll >= BOARDS[ring].length &&
+      position !== 0;
+
+    previousPlaceToken(ring, position);
+
+    if (!passedStart || phase !== "moved") return;
+
+    const bonus = ring === "inner" ? 5 : 10;
+
+    openModal(`
+      <h2>🚩 Ти перетнув START!</h2>
+      <p>${esc(player.name)}, запиши:</p>
+      <p class="effect">
+        🧠 +${bonus} знань · ⭐ +${bonus} репутації
+      </p>
+      <p class="note">
+        Грошовий бонус діє лише за точну
+        зупинку на START.
+      </p>
+      <p>
+        Після закриття повідомлення витягни
+        картку клітинки, на якій зупинився.
+      </p>
+    `, "info");
+  };
+
+  /* Нагадування про зарплату */
+  const previousNextTurn = nextTurn;
+
+  nextTurn = function () {
+    if (phase !== "read" || rolling) return;
+
+    const player = players[currentIndex];
+
+    player.completedTurns =
+      (player.completedTurns || 0) + 1;
+
+    previousNextTurn();
+
+    if (player.completedTurns % 3 !== 0) return;
+
+    const career = GAME_DATA.careers[player.career];
+    const level = player.salaryLevel || 0;
+
+    openModal(`
+      <h2>💰 Час отримати зарплату!</h2>
+
+      <p>
+        <b>${esc(player.name)}</b> завершив
+        ${player.completedTurns} власних ходів.
+      </p>
+
+      <label for="salaryLevelChoice">
+        Поточна кар’єрна сходинка
+      </label>
+
+      <select id="salaryLevelChoice"
+              style="width:100%;padding:12px;margin:12px 0">
+        ${career.levels.map((name, index) => `
+          <option value="${index}"
+            ${index === level ? "selected" : ""}>
+            ${index + 1}. ${esc(name)}
+          </option>
+        `).join("")}
+      </select>
+
+      <p id="salaryNoticeValue" class="effect">
+        Запиши: 💰 +${money(career.stats[level].salary)}
+      </p>
+
+      <p class="note">
+        Обери сходинку зі свого аркуша.
+        Гра лише нагадує про виплату.
+      </p>
+    `, "info");
+
+    document.getElementById("salaryLevelChoice").onchange =
+      function () {
+        player.salaryLevel = Number(this.value);
+
+        document.getElementById("salaryNoticeValue")
+          .textContent =
+            "Запиши: 💰 +" +
+            money(career.stats[player.salaryLevel].salary);
+      };
+  };
+})();
