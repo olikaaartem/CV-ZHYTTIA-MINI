@@ -339,3 +339,60 @@ $('begin').onclick=()=>{step=0;actor=0;renderWizard()};$('continue').onclick=con
       };
   };
 })();
+
+
+document.getElementById("draw").onclick = () => drawCard();
+document.getElementById("next").onclick = () => nextTurn();
+
+
+
+/* Ручний перехід на велике коло */
+(() => {
+  const button = document.createElement("button");
+
+  button.id = "moveToOuter";
+  button.textContent = "🚀 Перейти на велике коло";
+  button.className = "primary";
+
+  document.querySelector(".controls").prepend(button);
+
+  function updateTransitionButton() {
+    const player = players[currentIndex];
+
+    button.hidden = !player || player.ring === "outer";
+
+    button.disabled =
+      rolling ||
+      phase !== "awaitRoll";
+  }
+
+  button.onclick = () => {
+    const player = players[currentIndex];
+
+    if (!player || rolling || phase !== "awaitRoll") return;
+
+    if (!confirm(
+      `${player.name}: умови переходу перевірені за аркушем?`
+    )) return;
+
+    player.ring = "outer";
+    player.position = 0;
+
+    roll = null;
+    target = null;
+
+    renderGame();
+    fitBoard();
+
+    notify(`${player.name} переходить на велике коло!`);
+  };
+
+  const previousRenderGame = renderGame;
+
+  renderGame = function () {
+    previousRenderGame();
+    updateTransitionButton();
+  };
+
+  updateTransitionButton();
+})();
